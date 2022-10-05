@@ -12,13 +12,14 @@ const Box = (props) => {
   const geometry = new THREE.BoxGeometry(1, 1, 1);
   const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
   const cube = new THREE.Mesh(geometry, material);
-  cube.position.set(1, 0, 1);
+  cube.geometry.computeBoundingBox();
+  // cube.position.set(1, 0, 0);
 
   useEffect(() => {
-    setCollider("test");
-  }, [setCollider, collider]);
+    setCollider(cube);
+  }, [setCollider]);
 
-  return <primitive object={cube} />;
+  return <primitive object={cube} position={[2, 0, 0]} />;
 };
 
 export default Box;

@@ -1,22 +1,28 @@
-import { useCallback } from "react";
 import * as THREE from "three";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useEffect, useState, useRef } from "react";
 import { PerspectiveCamera } from "@react-three/drei";
 
+//state
 import { useCollider } from "../store";
+
+//utils
+import { characterMovement } from "../gameUtils/characterMovement";
 
 const SquarePlayer = (props) => {
   const character = useRef(null);
-  const camera = useRef();
+  const camera = useRef(null);
+  const detect = [];
 
-  // const collider = useCollider((state) => state.collider);
+  const collider = useCollider((state) => state.collider);
+  console.log(collider);
+  detect.push(collider);
 
   let forw = false;
   let right = false;
   let backward = false;
   let left = false;
-  let collide = false;
+  let _collide = false;
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyPress);
@@ -27,9 +33,10 @@ const SquarePlayer = (props) => {
     };
   });
 
-  const handleKeyPress = useCallback((event) => {
+  const handleKeyPress = (event) => {
     switch (event.keyCode) {
       case 87: //w
+        console.log("w");
         forw = true;
         break;
       case 65: //a
@@ -41,10 +48,12 @@ const SquarePlayer = (props) => {
       case 68: // d
         right = true;
         break;
+      default:
+        break;
     }
-  }, []);
+  };
 
-  const handleKeyUp = useCallback((event) => {
+  const handleKeyUp = (event) => {
     switch (event.keyCode) {
       case 87: //w
         forw = false;
@@ -58,8 +67,10 @@ const SquarePlayer = (props) => {
       case 68: // d
         right = false;
         break;
+      default:
+        break;
     }
-  }, []);
+  };
 
   const currentPosition = new THREE.Vector3();
   const currentLookAt = new THREE.Vector3();
@@ -81,7 +92,7 @@ const SquarePlayer = (props) => {
     return idealLookat;
   };
 
-  function updateCameraTarget(delta) {
+  const updateCameraTarget = (delta) => {
     const idealOffset = calculateIdealOffset();
     const idealLookat = calculateIdealLookat();
 
@@ -91,80 +102,30 @@ const SquarePlayer = (props) => {
     currentLookAt.lerp(idealLookat, t);
 
     camera.current.position.copy(currentPosition);
-  }
+  };
 
   // movement
 
-  const characterState = (delta) => {
-    const newVelocity = velocity;
-    const frameDecceleration = new THREE.Vector3(
-      newVelocity.x * decceleration.x,
-      newVelocity.y * decceleration.y,
-      newVelocity.z * decceleration.z
-    );
-    frameDecceleration.multiplyScalar(delta);
-    frameDecceleration.z =
-      Math.sign(frameDecceleration.z) *
-      Math.min(Math.abs(frameDecceleration.z), Math.abs(newVelocity.z));
-
-    newVelocity.add(frameDecceleration);
-
-    const controlObject = character.current;
-    const _Q = new THREE.Quaternion();
-    const _A = new THREE.Vector3();
-    const _R = controlObject.quaternion.clone();
-
-    //collider logic
-    let dir = new THREE.Vector3();
-    const pos = character.current.position.clone();
-    let raycaster = new THREE.Raycaster(pos, dir);
-    let blocked = false;
-
-    const acc = acceleration.clone();
-
-    if (forw) {
-      newVelocity.z += acc.z * delta;
-    }
-
-    if (backward) {
-      newVelocity.z -= acc.z * delta;
-    }
-    if (left) {
-      _A.set(0, 1, 0);
-      _Q.setFromAxisAngle(_A, 4.0 * Math.PI * delta * acceleration.y);
-      _R.multiply(_Q);
-    }
-    if (right) {
-      _A.set(0, 1, 0);
-      _Q.setFromAxisAngle(_A, 4.0 * -Math.PI * delta * acceleration.y);
-      _R.multiply(_Q);
-    }
-
-    controlObject.quaternion.copy(_R);
-
-    const oldPosition = new THREE.Vector3();
-    oldPosition.copy(controlObject.position);
-
-    const forward = new THREE.Vector3(0, 0, 1);
-    forward.applyQuaternion(controlObject.quaternion);
-    forward.normalize();
-
-    const sideways = new THREE.Vector3(1, 0, 0);
-    sideways.applyQuaternion(controlObject.quaternion);
-    sideways.normalize();
-
-    sideways.multiplyScalar(newVelocity.x * delta);
-    forward.multiplyScalar(newVelocity.z * delta);
-
-    controlObject.position.add(forward);
-    controlObject.position.add(sideways);
-
-    character.current.position.copy(controlObject.position);
-    updateCameraTarget(delta);
-  };
+  let arrow;
+  let pos;
+  let dir;
 
   useFrame((state, delta) => {
-    characterState(delta);
+    characterMovement(
+      delta,
+      velocity,
+      character,
+      arrow,
+      acceleration,
+      collider,
+      detect,
+      forw,
+      backward,
+      left,
+      right,
+      decceleration,
+      updateCameraTarget
+    );
     const idealLookat = calculateIdealLookat();
     state.camera.lookAt(idealLookat);
     state.camera.updateProjectionMatrix();
@@ -176,6 +137,7 @@ const SquarePlayer = (props) => {
       <mesh ref={character}>
         <boxGeometry args={[0.2, 0.2, 0.2]} position={[0, 0.5, 0]} />
         <meshBasicMaterial color="red" transparent={true} opacity={1} />
+        {/* <arrowHelper args={[pos, dir, 1, 0xfff]} /> */}
       </mesh>
     </>
   );
