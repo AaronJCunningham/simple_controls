@@ -1,18 +1,18 @@
 import * as THREE from "three";
 
+const decceleration = new THREE.Vector3(-0.0005, -0.0001, -5.0);
+const acceleration = new THREE.Vector3(1, 0.125, 10.0); //change speed
+const velocity = new THREE.Vector3(0, 0, 0);
+
 export const characterMovement = (
   delta,
-  velocity,
   character,
-  arrow,
-  acceleration,
   collider,
   detect,
   forw,
   backward,
   left,
   right,
-  decceleration,
   updateCameraTarget
 ) => {
   const newVelocity = velocity;
@@ -38,7 +38,7 @@ export const characterMovement = (
   let dir = new THREE.Vector3();
   character.current.getWorldDirection(dir);
   let raycaster = new THREE.Raycaster(pos, dir);
-  arrow = new THREE.ArrowHelper(pos, dir, 10, Math.random() * 0xffffff);
+
   let blocked = false;
 
   const acc = acceleration.clone();

@@ -22,7 +22,6 @@ const SquarePlayer = (props) => {
   let right = false;
   let backward = false;
   let left = false;
-  let _collide = false;
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyPress);
@@ -74,9 +73,6 @@ const SquarePlayer = (props) => {
 
   const currentPosition = new THREE.Vector3();
   const currentLookAt = new THREE.Vector3();
-  const decceleration = new THREE.Vector3(-0.0005, -0.0001, -5.0);
-  const acceleration = new THREE.Vector3(1, 0.125, 10.0); //change speed
-  const velocity = new THREE.Vector3(0, 0, 0);
 
   const calculateIdealOffset = () => {
     const idealOffset = new THREE.Vector3(0, 2, -3);
@@ -104,26 +100,16 @@ const SquarePlayer = (props) => {
     camera.current.position.copy(currentPosition);
   };
 
-  // movement
-
-  let arrow;
-  let pos;
-  let dir;
-
   useFrame((state, delta) => {
     characterMovement(
       delta,
-      velocity,
       character,
-      arrow,
-      acceleration,
       collider,
       detect,
       forw,
       backward,
       left,
       right,
-      decceleration,
       updateCameraTarget
     );
     const idealLookat = calculateIdealLookat();
